@@ -801,7 +801,7 @@
         clearInterval(timerInterval);
         isTimerRunning = false;
         timeRemaining = minutes * 60;
-        lastDisplayedTime = timeRemaining;
+        lastDisplayedTime = -1; // Force display update by setting to impossible value
         
         const startBtn = document.getElementById('startStopBtn');
         startBtn.innerText = "Start";
