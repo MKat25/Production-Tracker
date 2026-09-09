@@ -264,9 +264,15 @@
             max-width: 80px;
         }
 
-        .add-events-btn {
-            background: #4caf50;
-            color: white;
+        .manual-entry-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .add-events-btn,
+        .remove-event-btn {
             border: none;
             padding: 8px 16px;
             border-radius: 4px;
@@ -274,6 +280,13 @@
             cursor: pointer;
             font-size: 14px;
             transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .add-events-btn {
+            background: #4caf50;
+            color: white;
+            flex: 1;
+            min-width: 120px;
         }
 
         .add-events-btn:hover {
@@ -284,6 +297,28 @@
         .add-events-btn:focus {
             outline: 2px solid #4caf50;
             outline-offset: 2px;
+        }
+
+        .remove-event-btn {
+            background: #ffb74d;
+            color: #333;
+            min-width: 100px;
+        }
+
+        .remove-event-btn:hover {
+            background: #ffa726;
+            box-shadow: 0 2px 8px rgba(255, 167, 38, 0.3);
+        }
+
+        .remove-event-btn:focus {
+            outline: 2px solid #ffb74d;
+            outline-offset: 2px;
+        }
+
+        .remove-event-btn:disabled {
+            background: #cfd8dc;
+            color: #999;
+            cursor: not-allowed;
         }
 
         .progress-container {
@@ -481,8 +516,16 @@
                 flex-direction: column;
             }
 
-            .manual-entry-form input,
-            .add-events-btn {
+            .manual-entry-form input {
+                width: 100%;
+            }
+
+            .manual-entry-buttons {
+                flex-direction: column;
+            }
+
+            .add-events-btn,
+            .remove-event-btn {
                 width: 100%;
             }
         }
@@ -551,7 +594,10 @@
                 value="1"
                 aria-label="Number of events"
             >
-            <button class="add-events-btn" onclick="addManualEvents()" aria-label="Add events to total">Add</button>
+            <div class="manual-entry-buttons">
+                <button class="add-events-btn" onclick="addManualEvents()" aria-label="Add events to total">Add</button>
+                <button class="remove-event-btn" id="removeEventBtn" onclick="removeManualEvent()" aria-label="Remove 1 event from total (undo last mistake)">Remove 1</button>
+            </div>
         </div>
     </div>
 
@@ -855,12 +901,37 @@
     }
 
     /**
+     * Remove 1 manual event from the total (for mistake correction)
+     */
+    function removeManualEvent() {
+        try {
+            let manualEvents = parseInt(localStorage.getItem(CONFIG.MANUAL_EVENTS_KEY)) || 0;
+            
+            if (manualEvents > 0) {
+                manualEvents -= 1;
+                localStorage.setItem(CONFIG.MANUAL_EVENTS_KEY, manualEvents.toString());
+                
+                // Update display
+                calculateTotals(false);
+                
+                // Show confirmation
+                showTemporaryMessage('✓ Removed 1 event');
+            } else {
+                showTemporaryMessage('No extra events to remove');
+            }
+        } catch (error) {
+            console.warn('Error removing manual event:', error);
+            alert('Could not remove event.');
+        }
+    }
+
+    /**
      * Show temporary success message
      */
     function showTemporaryMessage(text) {
         const msg = document.getElementById('completionMessage');
         const originalText = msg.innerHTML;
-        msg.innerHTML = `✓ ${text}`;
+        msg.innerHTML = `${text}`;
         msg.classList.add('show');
         
         setTimeout(() => {
@@ -889,6 +960,15 @@
             currentTotal += manualEvents;
         } catch (error) {
             console.warn('Error reading manual events:', error);
+        }
+
+        // Update remove button state
+        try {
+            const manualEvents = parseInt(localStorage.getItem(CONFIG.MANUAL_EVENTS_KEY)) || 0;
+            const removeBtn = document.getElementById('removeEventBtn');
+            removeBtn.disabled = manualEvents <= 0;
+        } catch (error) {
+            console.warn('Error updating remove button:', error);
         }
 
         document.getElementById('progressNumber').innerText = currentTotal;
