@@ -122,6 +122,170 @@
             display: block;
         }
 
+        /* Circular Progress Visual */
+        .progress-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .circular-progress-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin-bottom: 20px;
+        }
+
+        svg.circular-progress {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .circular-progress circle {
+            fill: none;
+            stroke-linecap: round;
+        }
+
+        .progress-circle-bg {
+            stroke: #e0e0e0;
+        }
+
+        .progress-circle-fill {
+            stroke: #4caf50;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .progress-text-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .progress-number {
+            font-size: 48px;
+            font-weight: bold;
+            color: #111;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .progress-stats {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #111;
+        }
+
+        .stat-value.baseline {
+            color: #0288d1;
+        }
+
+        .stat-value.stretch {
+            color: #9c27b0;
+        }
+
+        .stat-value.pace {
+            color: #4caf50;
+        }
+
+        /* Manual Entry Section */
+        .manual-entry-section {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .manual-entry-section h3 {
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            color: #2e7d32;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .manual-entry-form {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .manual-entry-form input {
+            flex: 1;
+            min-width: 120px;
+            padding: 8px 12px;
+            border: 1px solid #4caf50;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .manual-entry-form input:focus {
+            outline: none;
+            border-color: #2e7d32;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+        }
+
+        .manual-entry-form input[type="number"] {
+            max-width: 80px;
+        }
+
+        .add-events-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .add-events-btn:hover {
+            background: #45a049;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        }
+
+        .add-events-btn:focus {
+            outline: 2px solid #4caf50;
+            outline-offset: 2px;
+        }
+
         .progress-container {
             background: #eee;
             border-radius: 8px;
@@ -130,6 +294,7 @@
             overflow: hidden;
             margin-bottom: 25px;
             border: 1px solid #ddd;
+            display: none;
         }
 
         .progress-bar {
@@ -149,6 +314,7 @@
             padding: 15px;
             border-radius: 8px;
             gap: 15px;
+            display: none;
         }
 
         .stats span {
@@ -301,6 +467,24 @@
                 flex-direction: column;
                 align-items: flex-start;
             }
+
+            .circular-progress-container {
+                width: 160px;
+                height: 160px;
+            }
+
+            .progress-number {
+                font-size: 36px;
+            }
+
+            .manual-entry-form {
+                flex-direction: column;
+            }
+
+            .manual-entry-form input,
+            .add-events-btn {
+                width: 100%;
+            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -319,6 +503,56 @@
             <button class="timer-btn secondary" onclick="setTimerDuration(5)" aria-label="Set timer to 5 minutes">5m</button>
         </div>
         <div class="timer-alert" id="timerAlert" role="alert"></div>
+    </div>
+
+    <!-- Circular Progress Visual -->
+    <div class="progress-section">
+        <div class="circular-progress-container">
+            <svg class="circular-progress" viewBox="0 0 200 200">
+                <circle class="progress-circle-bg" cx="100" cy="100" r="90"></circle>
+                <circle class="progress-circle-fill" id="progressCircle" cx="100" cy="100" r="90" stroke-dasharray="565.48" stroke-dashoffset="565.48"></circle>
+            </svg>
+            <div class="progress-text-center">
+                <div class="progress-number" id="progressNumber">0</div>
+                <div class="progress-label">Events Completed</div>
+            </div>
+        </div>
+        <div class="progress-stats">
+            <div class="stat-box">
+                <div class="stat-label">Baseline Target</div>
+                <div class="stat-value baseline" id="baselineTarget">220</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Stretch Target</div>
+                <div class="stat-value stretch" id="stretchTarget">280</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Pace Delta</div>
+                <div class="stat-value pace" id="paceDelta">+0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Entry Section -->
+    <div class="manual-entry-section">
+        <h3>➕ Add Extra Events</h3>
+        <div class="manual-entry-form">
+            <input 
+                type="text" 
+                id="eventDescription" 
+                placeholder="Event description (optional)"
+                aria-label="Event description"
+            >
+            <input 
+                type="number" 
+                id="eventCount" 
+                placeholder="Count" 
+                min="1" 
+                value="1"
+                aria-label="Number of events"
+            >
+            <button class="add-events-btn" onclick="addManualEvents()" aria-label="Add events to total">Add</button>
+        </div>
     </div>
 
     <div class="progress-container">
@@ -343,9 +577,11 @@
     // Configuration constants
     const CONFIG = {
         TOTAL_WEEKLY_TARGET: 220,
+        STRETCH_TARGET: 280,
         FOCUS_TIME_MINUTES: 25,
         BREAK_TIME_MINUTES: 5,
-        STORAGE_PREFIX: 'adhd_tracker_block_'
+        STORAGE_PREFIX: 'adhd_tracker_block_',
+        MANUAL_EVENTS_KEY: 'adhd_tracker_manual_events'
     };
 
     const scheduleData = [
@@ -583,6 +819,57 @@
     }
 
     /**
+     * Add manual events to the total
+     */
+    function addManualEvents() {
+        const countInput = document.getElementById('eventCount');
+        const descriptionInput = document.getElementById('eventDescription');
+        const count = parseInt(countInput.value, 10) || 0;
+
+        if (count <= 0) {
+            alert('Please enter a valid number of events');
+            return;
+        }
+
+        try {
+            let manualEvents = parseInt(localStorage.getItem(CONFIG.MANUAL_EVENTS_KEY)) || 0;
+            manualEvents += count;
+            localStorage.setItem(CONFIG.MANUAL_EVENTS_KEY, manualEvents.toString());
+
+            // Clear inputs
+            countInput.value = '1';
+            descriptionInput.value = '';
+
+            // Update display
+            calculateTotals(true);
+
+            // Show confirmation
+            const message = descriptionInput.value 
+                ? `Added ${count} events: ${descriptionInput.value}` 
+                : `Added ${count} events!`;
+            showTemporaryMessage(message);
+        } catch (error) {
+            console.warn('Error adding manual events:', error);
+            alert('Could not add events. Storage may be full.');
+        }
+    }
+
+    /**
+     * Show temporary success message
+     */
+    function showTemporaryMessage(text) {
+        const msg = document.getElementById('completionMessage');
+        const originalText = msg.innerHTML;
+        msg.innerHTML = `✓ ${text}`;
+        msg.classList.add('show');
+        
+        setTimeout(() => {
+            msg.innerHTML = originalText;
+            msg.classList.remove('show');
+        }, 2000);
+    }
+
+    /**
      * Calculate total progress and update UI
      */
     function calculateTotals(triggerConfetti) {
@@ -596,6 +883,15 @@
             }
         });
 
+        // Add manual events
+        try {
+            const manualEvents = parseInt(localStorage.getItem(CONFIG.MANUAL_EVENTS_KEY)) || 0;
+            currentTotal += manualEvents;
+        } catch (error) {
+            console.warn('Error reading manual events:', error);
+        }
+
+        document.getElementById('progressNumber').innerText = currentTotal;
         document.getElementById('completedCount').innerText = currentTotal;
 
         const percentage = Math.min(
@@ -603,16 +899,33 @@
             100
         );
 
-        document.getElementById('percentLabel').innerText = `${percentage}%`;
+        // Update circular progress
+        const circumference = 2 * Math.PI * 90; // radius = 90
+        const offset = circumference - (percentage / 100) * circumference;
+        document.getElementById('progressCircle').style.strokeDashoffset = offset;
+
+        // Update linear progress bar
         document.getElementById('progressBar').style.width = `${percentage}%`;
-        
-        // Update progress bar ARIA
         document.getElementById('progressBar').setAttribute('aria-valuenow', percentage);
 
-        if (percentage === 100 && triggerConfetti) {
+        // Update stats
+        document.getElementById('percentLabel').innerText = `${percentage}%`;
+        document.getElementById('baselineTarget').innerText = CONFIG.TOTAL_WEEKLY_TARGET;
+        document.getElementById('stretchTarget').innerText = CONFIG.STRETCH_TARGET;
+
+        // Calculate pace delta
+        const paceDelta = currentTotal - CONFIG.TOTAL_WEEKLY_TARGET;
+        const paceDeltaEl = document.getElementById('paceDelta');
+        paceDeltaEl.innerText = (paceDelta >= 0 ? '+' : '') + paceDelta;
+        paceDeltaEl.style.color = paceDelta >= 0 ? '#4caf50' : '#e53935';
+
+        // Check for baseline completion
+        if (currentTotal >= CONFIG.TOTAL_WEEKLY_TARGET && triggerConfetti) {
             showCompletionMessage();
-            fireConfettiShower();
-        } else if (percentage < 100) {
+            if (currentTotal >= CONFIG.STRETCH_TARGET) {
+                fireConfettiShower();
+            }
+        } else if (currentTotal < CONFIG.TOTAL_WEEKLY_TARGET) {
             document.getElementById('completionMessage').classList.remove('show');
         }
     }
@@ -622,6 +935,7 @@
      */
     function showCompletionMessage() {
         const msg = document.getElementById('completionMessage');
+        msg.innerHTML = '✨ Congratulations! You\'ve completed your weekly goal! ✨';
         msg.classList.add('show');
         setTimeout(() => {
             msg.classList.remove('show');
@@ -650,7 +964,7 @@
      * Reset tracker with confirmation
      */
     function resetTracker() {
-        if (confirm("Are you sure you want to clear your current progress? This will reset all your checkmarks.")) {
+        if (confirm("Are you sure you want to clear your current progress? This will reset all your checkmarks and manual entries.")) {
             try {
                 for (let i = 0; i < globalBlockIndex; i++) {
                     localStorage.removeItem(`${CONFIG.STORAGE_PREFIX}${i}`);
@@ -659,6 +973,7 @@
                     if (checkbox) checkbox.checked = false;
                     if (wrapper) wrapper.classList.remove('checked');
                 }
+                localStorage.removeItem(CONFIG.MANUAL_EVENTS_KEY);
                 calculateTotals(false);
             } catch (error) {
                 console.warn('Error resetting tracker:', error);
