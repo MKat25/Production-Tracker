@@ -356,6 +356,23 @@
             min-width: 0;
         }
 
+        .info-note {
+            background: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+            padding: 12px 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #4a148c;
+            line-height: 1.5;
+        }
+
+        .info-note strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #6a1b9a;
+        }
+
         .day-section {
             margin-bottom: 20px;
             border-bottom: 1px solid #eee;
@@ -528,6 +545,11 @@
             .remove-event-btn {
                 width: 100%;
             }
+
+            .info-note {
+                font-size: 12px;
+                padding: 10px 12px;
+            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -608,6 +630,11 @@
     <div class="stats">
         <span>Completed: <span id="completedCount">0</span> / 220</span>
         <span id="percentLabel">0%</span>
+    </div>
+
+    <div class="info-note">
+        <strong>ℹ️ How it works:</strong>
+        Each event block = 2 hours of work. Check off blocks as you complete them to track your weekly production goal.
     </div>
 
     <div id="trackerForm" role="region" aria-label="Daily event tracking blocks"></div>
