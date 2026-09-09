@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADHD Event Tracker & Pomodoro</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        h1 {
+            font-size: 24px;
+            color: #111;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        /* Pomodoro Widget Styling */
+        .pomodoro-box {
+            background: #fff3e0;
+            border: 2px dashed #ff9800;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .timer-display {
+            font-size: 36px;
+            font-weight: bold;
+            font-family: monospace;
+            color: #e65100;
+            margin: 5px 0;
+        }
+        .timer-btn {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 4px;
+        }
+        .timer-btn:hover {
+            background: #f57c00;
+        }
+        .timer-btn.secondary {
+            background: #cfd8dc;
+            color: #37474f;
+        }
+        .timer-btn.secondary:hover {
+            background: #b0bec5;
+        }
+
+        .progress-container {
+            background: #eee;
+            border-radius: 8px;
+            height: 20px;
+            width: 100%;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+        .progress-bar {
+            background: #4caf50;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 25px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .day-section {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        .day-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .hours-tag {
+            font-size: 12px;
+            background: #e1f5fe;
+            color: #0288d1;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        .block-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+        .block-item input {
+            margin-right: 12px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+        .block-item.checked label {
+            text-decoration: line-through;
+            color: #888;
+        }
+        label {
+            cursor: pointer;
+            user-select: none;
+        }
+        .reset-btn {
+            background-color: #e53935;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .reset-btn:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+    <script src="https://jsdelivr.net"></script>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎯 Weekly Event Tracker</h1>
+    <div class="subtitle">ADHD micro-targets with auto-save & Pomodoro kitchen timer</div>
+    
+    <!-- Pomodoro Timer Module -->
+    <div class="pomodoro-box">
+        <div style="font-weight: bold; color: #e65100;">⏱ Focus Dashboard</div>
+        <div class="timer-display" id="timerDisplay">25:00</div>
+        <div>
+            <button class="timer-btn" id="startStopBtn" onclick="toggleTimer()">Start Focus</button>
+            <button class="timer-btn secondary" onclick="setTimerPreset(25, 'Focus')">25m Work</button>
+            <button class="timer-btn secondary" onclick="setTimerPreset(5, 'Break')">5m Rest</button>
+        </div>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    
+    <div class="stats">
+        <span>Completed: <span id="completedCount">0</span> / 220</span>
+        <span id="percentLabel">0%</span>
+    </div>
+
+    <div id="trackerForm"></div>
+
+    <button class="reset-btn" onclick="resetTracker()">Reset Week Progress</button>
+</div>
+
+<script>
+    const scheduleData = [
+        { day: "Monday", hours: 10, target: 55, blocks: [11, 11, 11, 11, 11] },
+        { day: "Tuesday", hours: 10, target: 55, blocks: [11, 11, 11, 11, 11] },
+        { day: "Wednesday", hours: 9, target: 50, blocks: [11, 11, 11, 11, 6] },
+        { day: "Thursday", hours: 7, target: 39, blocks: [11, 11, 11, 6] },
+        { day: "Friday", hours: 4, target: 21, blocks: [11, 10] }
+    ];
+
+    const container = document.getElementById('trackerForm');
+    const totalTarget = 220;
+    let globalBlockIndex = 0;
+
+    // Timer Variables
+    let timerInterval = null;
+    let timeRemaining = 25 * 60; 
+    let isTimerRunning = false;
+    let currentMode = 'Focus';
+
+    // Build Tracker Fields
+    scheduleData.forEach(dayData => {
+        let dayHtml = `
+            <div class="day-section">
+                <div class="day-title">
+                    ${dayData.day} <span class="hours-tag">${dayData.hours} Hours (Goal: ${dayData.target})</span>
+                </div>
+        `;
+        
+        let dynamicTotal = 0;
+        dayData.blocks.forEach((blockValue, bIndex) => {
+            dynamicTotal += blockValue;
+            let labelText = `Block ${bIndex + 1}: Process ${blockValue} events (Running Day Total: ${dynamicTotal})`;
+            if (dynamicTotal === dayData.target) {
+                labelText += " ✨ Day Goal Clear!";
+            }
+            
+            dayHtml += `
+                <div class="block-item" id="item-${globalBlockIndex}">
+                    <input type="checkbox" id="check-${globalBlockIndex}" data-value="${blockValue}" onchange="updateProgress(${globalBlockIndex})">
+                    <label for="check-${globalBlockIndex}">${labelText}</label>
+                </div>
+            `;
+            globalBlockIndex++;
+        });
+
+        dayHtml += `</div>`;
+        container.innerHTML += dayHtml;
+    });
+
+    // Pomodoro Functions
+    function updateTimerDisplay() {
+        const mins = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+        const secs = (timeRemaining % 60).toString().padStart(2, '0');
+        const displayText = `${mins}:${secs}`;
+        document.getElementById('timerDisplay').innerText = displayText;
+        document.title = `(${displayText}) ${currentMode} | Event Tracker`;
+    }
+
+    function toggleTimer() {
+        const btn = document.getElementById('startStopBtn');
+        if (isTimerRunning) {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            btn.innerText = "Resume";
+            btn.style.background = "#ff9800";
+        } else {
+            isTimerRunning = true;
+            btn.innerText = "Pause";
+            btn.style.background = "#721c24";
+            timerInterval = setInterval(() => {
+                if (timeRemaining > 0) {
+                    timeRemaining--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    isTimerRunning = false;
+                    btn.innerText = "Start Focus";
+                    btn.style.background = "#ff9800";
+                    alert(`🚨 ${currentMode} Session Finished! Take action or switch states.`);
+                    document.title = "Time Up! | Event Tracker";
+                }
+            }, 1000);
+        }
+    }
+
+    function setTimerPreset(minutes, mode) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        currentMode = mode;
+        timeRemaining = minutes * 60;
+        document.getElementById('startStopBtn').innerText = `Start ${mode}`;
+        document.getElementById('startStopBtn').style.background = "#ff9800";
+        updateTimerDisplay();
+    }
+
+    // Storage and Progress calculations
+    function loadSavedState() {
+        for (let i = 0; i < globalBlockIndex; i++) {
+            const isChecked = localStorage.getItem(`adhd_tracker_block_${i}`) === 'true';
+            const checkbox = document.getElementById(`check-${i}`);
+            const wrapper = document.getElementById(`item-${i}`);
+            
+            if (checkbox && isChecked) {
+                checkbox.checked = true;
+                wrapper.classList.add('checked');
+            }
+        }
+        calculateTotals(false);
+    }
+
+    function updateProgress(index) {
+        const wrapper = document.getElementById(`item-${index}`);
+        const checkbox = document.getElementById(`check-${index}`);
+        
+        if (checkbox.checked) {
+            wrapper.classList.add('checked');
+            localStorage.setItem(`adhd_tracker_block_${index}`, 'true');
+            calculateTotals(true);
+        } else {
+            wrapper.classList.remove('checked');
+localStorage.setItem(adhd_tracker_block_${index}, 'false');calculateTotals(false);}}function calculateTotals(triggerConfetti) {let currentTotal = 0;document.querySelectorAll('input[type="checkbox"]').forEach(box => {if (box.checked) {currentTotal += parseInt(box.getAttribute('data-value'));}});document.getElementById('completedCount').innerText = currentTotal;let percentage = Math.min(Math.round((currentTotal / totalTarget) * 100), 100);document.getElementById('percentLabel').innerText = percentage + "%";document.getElementById('progressBar').style.width = percentage + "%";if (percentage === 100 && triggerConfetti) {fireConfettiShower();}}function fireConfettiShower() {const duration = 3 * 1000;const end = Date.now() + duration;(function frame() {confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });if (Date.now() < end) requestAnimationFrame(frame);}());}function resetTracker() {if (confirm("Are you sure you want to clear your current progress for a new week?")) {for (let i = 0; i < globalBlockIndex; i++) {localStorage.removeItem(adhd_tracker_block_${i});const checkbox = document.getElementById(check-${i});const wrapper = document.getElementById(item-${i});if (checkbox) checkbox.checked = false;if (wrapper) wrapper.classList.remove('checked');}calculateTotals(false);}}window.onload = loadSavedState;
