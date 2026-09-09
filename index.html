@@ -312,11 +312,11 @@
     
     <div class="pomodoro-box">
         <div>Focus Timer</div>
-        <div class="timer-display" id="timerDisplay" role="timer" aria-label="Timer display"></div>
+        <div class="timer-display" id="timerDisplay" role="timer" aria-label="Timer display">25:00</div>
         <div class="timer-buttons">
-            <button class="timer-btn" id="startStopBtn" onclick="toggleTimer()" aria-label="Start or pause the timer">Start Timer</button>
-            <button class="timer-btn secondary" onclick="setTimerPreset(25, 'Focus')" aria-label="Timer Display">25:00</button>
-            <button class="timer-btn secondary" onclick="setTimerPreset(5, 'Break')" aria-label="Timer Display">05:00</button>
+            <button class="timer-btn" id="startStopBtn" onclick="toggleTimer()" aria-label="Start or pause the timer">Start</button>
+            <button class="timer-btn secondary" onclick="setTimerDuration(25)" aria-label="Set timer to 25 minutes">25m</button>
+            <button class="timer-btn secondary" onclick="setTimerDuration(5)" aria-label="Set timer to 5 minutes">5m</button>
         </div>
         <div class="timer-alert" id="timerAlert" role="alert"></div>
     </div>
@@ -363,7 +363,6 @@
     let timerInterval = null;
     let timeRemaining = CONFIG.FOCUS_TIME_MINUTES * 60;
     let isTimerRunning = false;
-    let currentMode = 'Focus';
     let lastDisplayedTime = timeRemaining;
 
     /**
@@ -427,7 +426,7 @@
 
         // Update title less frequently to reduce overhead
         if (timeRemaining % 5 === 0 || timeRemaining <= 10) {
-            document.title = `(${displayText}) ${currentMode} | Event Tracker`;
+            document.title = `(${displayText}) Timer | Event Tracker`;
         }
     }
 
@@ -475,11 +474,11 @@
         const btn = document.getElementById('startStopBtn');
         const alertEl = document.getElementById('timerAlert');
 
-        btn.innerText = "Start Focus";
-        btn.setAttribute('aria-label', 'Start a new timer');
+        btn.innerText = "Start";
+        btn.setAttribute('aria-label', 'Start the timer');
         btn.style.background = "#ff9800";
 
-        alertEl.textContent = `🚨 ${currentMode} session complete! Ready to continue?`;
+        alertEl.textContent = `🚨 Timer complete! Ready to continue?`;
         alertEl.classList.add('show');
 
         document.title = "Time Up! | Event Tracker";
@@ -514,23 +513,22 @@
     }
 
     /**
-     * Set timer to preset value
+     * Set timer duration (in minutes) without starting it
      */
-    function setTimerPreset(minutes, mode) {
+    function setTimerDuration(minutes) {
         clearInterval(timerInterval);
         isTimerRunning = false;
-        currentMode = mode;
         timeRemaining = minutes * 60;
         lastDisplayedTime = timeRemaining;
         
         const startBtn = document.getElementById('startStopBtn');
-        startBtn.innerText = `Start ${mode}`;
-        startBtn.setAttribute('aria-label', `Start ${minutes} minute ${mode.toLowerCase()} timer`);
+        startBtn.innerText = "Start";
+        startBtn.setAttribute('aria-label', 'Start the timer');
         startBtn.style.background = "#ff9800";
 
         const timerDisplay = document.getElementById('timerDisplay');
         timerDisplay.classList.remove('focus-mode', 'break-mode');
-        timerDisplay.classList.add(mode === 'Focus' ? 'focus-mode' : 'break-mode');
+        timerDisplay.classList.add(minutes === 25 ? 'focus-mode' : 'break-mode');
 
         document.getElementById('timerAlert').classList.remove('show');
         updateTimerDisplay();
